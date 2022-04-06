@@ -21,6 +21,7 @@ async function run() {
         const database = client.db("Receive_Messages")
         const messagesCollection = database.collection("Messages")
         const appointCollection = database.collection("appointment")
+        const usersCollection = database.collection("saveUsers")
 
         // Messages Post
         app.post("/addMessages", async (req, res) => {
@@ -28,7 +29,7 @@ async function run() {
             console.log(messages)
             const result = await messagesCollection.insertOne(messages);
             res.json(result)
-            console.log(result)
+            // console.log(result)
         })
 
         // Appointment Post
@@ -36,7 +37,7 @@ async function run() {
             const appoint = req.body;
             const result = await appointCollection.insertOne(appoint);
             res.json(result)
-            console.log(result)
+            // console.log(result)
         })
         // Receive appointments by Get
         app.get("/appointments", async (req, res) => {
@@ -54,8 +55,26 @@ async function run() {
             console.log(id)
             const query = { _id: ObjectId(id) }
             const cursor = await appointCollection.deleteOne(query);
-            console.log(cursor);
             res.json(cursor);
+        })
+
+        // Save Users Post
+        app.post("/users", async (req, res) => {
+            const usersData = req.body;
+            const result = await usersCollection.insertOne(usersData);
+            // console.log(result);
+            res.json(result);
+        })
+
+        // SaveUsers Put
+        app.put("/users", async (req, res) => {
+            const user = req.body;
+            const filter = { email: user.email }
+            const options = { upsert: true };
+            const updateDoc = { $set: user };
+            const resultData = await usersCollection.updateOne(filter, updateDoc, options)
+            // console.log(resultData);
+            res.json(resultData)
         })
 
     }
