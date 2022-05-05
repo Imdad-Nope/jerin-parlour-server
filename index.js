@@ -5,10 +5,12 @@ require('dotenv').config();
 const { MongoClient } = require('mongodb');
 const admin = require("firebase-admin");
 const ObjectId = require('mongodb').ObjectId;
+const filesUpload = require('express-fileupload');
 const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+app.use(filesUpload());
 
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_PRIVATE_KEY);
@@ -49,6 +51,7 @@ async function run() {
         const messagesCollection = database.collection("Messages")
         const appointCollection = database.collection("appointment")
         const usersCollection = database.collection("saveUsers")
+        const testimonialsCollection = database.collection("testimonials")
 
         // Messages Post
         app.post("/addMessages", async (req, res) => {
@@ -134,6 +137,33 @@ async function run() {
                 isAdmin = true;
             };
             res.json({ admin: isAdmin })
+        });
+
+        // Post Uploading Images
+        app.post("/testimonials", async (req, res) => {
+            const name = req.body.name;
+            const description = req.body.description;
+            const email = req.body.email;
+            const pic = req.files.image;
+            const picData = pic.data;
+            const encodedPic = picData.toString('base64');
+            const imageBuffer = Buffer.from(encodedPic, 'base64');
+            const testimonials = {
+                name,
+                description,
+                email,
+                image: imageBuffer
+            };
+            const result = await testimonialsCollection.insertOne(testimonials);
+            res.json(result);
+        });
+
+        // Get uploaded images
+
+        app.get("/testimonials", async (req, res) => {
+            const cursor = testimonialsCollection.find({});
+            const result = await cursor.toArray();
+            res.json(result);
         })
 
     }
